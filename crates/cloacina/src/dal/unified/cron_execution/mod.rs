@@ -62,7 +62,9 @@ impl<'a> CronExecutionDAL<'a> {
         new_execution: NewCronExecution,
     ) -> Result<CronExecution, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.create_postgres(new_execution).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.create_sqlite(new_execution).await,
         }
     }
@@ -74,10 +76,12 @@ impl<'a> CronExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.update_pipeline_execution_id_postgres(cron_execution_id, pipeline_execution_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.update_pipeline_execution_id_sqlite(cron_execution_id, pipeline_execution_id)
                     .await
@@ -91,7 +95,9 @@ impl<'a> CronExecutionDAL<'a> {
         older_than_minutes: i32,
     ) -> Result<Vec<CronExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.find_lost_executions_postgres(older_than_minutes).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.find_lost_executions_sqlite(older_than_minutes).await,
         }
     }
@@ -99,7 +105,9 @@ impl<'a> CronExecutionDAL<'a> {
     /// Retrieves a cron execution record by its ID.
     pub async fn get_by_id(&self, id: UniversalUuid) -> Result<CronExecution, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_by_id_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_by_id_sqlite(id).await,
         }
     }
@@ -112,10 +120,12 @@ impl<'a> CronExecutionDAL<'a> {
         offset: i64,
     ) -> Result<Vec<CronExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_by_schedule_id_postgres(schedule_id, limit, offset)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_by_schedule_id_sqlite(schedule_id, limit, offset)
                     .await
@@ -129,10 +139,12 @@ impl<'a> CronExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<Option<CronExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_by_pipeline_execution_id_postgres(pipeline_execution_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_by_pipeline_execution_id_sqlite(pipeline_execution_id)
                     .await
@@ -149,10 +161,12 @@ impl<'a> CronExecutionDAL<'a> {
         offset: i64,
     ) -> Result<Vec<CronExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_by_time_range_postgres(start_time, end_time, limit, offset)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_by_time_range_sqlite(start_time, end_time, limit, offset)
                     .await
@@ -166,7 +180,9 @@ impl<'a> CronExecutionDAL<'a> {
         schedule_id: UniversalUuid,
     ) -> Result<i64, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.count_by_schedule_postgres(schedule_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.count_by_schedule_sqlite(schedule_id).await,
         }
     }
@@ -178,10 +194,12 @@ impl<'a> CronExecutionDAL<'a> {
         scheduled_time: DateTime<Utc>,
     ) -> Result<bool, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.execution_exists_postgres(schedule_id, scheduled_time)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.execution_exists_sqlite(schedule_id, scheduled_time)
                     .await
@@ -195,7 +213,9 @@ impl<'a> CronExecutionDAL<'a> {
         schedule_id: UniversalUuid,
     ) -> Result<Option<CronExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_latest_by_schedule_postgres(schedule_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_latest_by_schedule_sqlite(schedule_id).await,
         }
     }
@@ -206,7 +226,9 @@ impl<'a> CronExecutionDAL<'a> {
         older_than: DateTime<Utc>,
     ) -> Result<usize, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.delete_older_than_postgres(older_than).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.delete_older_than_sqlite(older_than).await,
         }
     }
@@ -217,7 +239,9 @@ impl<'a> CronExecutionDAL<'a> {
         since: DateTime<Utc>,
     ) -> Result<CronExecutionStats, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_execution_stats_postgres(since).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_execution_stats_sqlite(since).await,
         }
     }

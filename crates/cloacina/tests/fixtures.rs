@@ -207,7 +207,9 @@ impl TestFixture {
     /// Get the name of the current backend (postgres or sqlite)
     pub fn get_current_backend(&self) -> &'static str {
         match self.db.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => "postgres",
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => "sqlite",
         }
     }
@@ -238,6 +240,7 @@ impl TestFixture {
     /// Initialize the fixture with additional setup
     pub async fn initialize(&mut self) {
         // Initialize the database schema based on the backend
+        #[cfg(feature = "postgres")]
         if self.db.backend() == BackendType::Postgres {
             // Use setup_schema which creates schema, sets search_path, and runs migrations
             self.db
@@ -249,6 +252,7 @@ impl TestFixture {
         }
 
         // For SQLite, run migrations through the pool connection
+        #[cfg(feature = "sqlite")]
         if self.db.backend() == BackendType::Sqlite {
             let conn = self
                 .db
@@ -269,6 +273,7 @@ impl TestFixture {
     pub async fn reset_database(&mut self) {
         // Use the pool for PostgreSQL reset operations to avoid interaction issues
         // between raw connections and pool connections (fixes SIGSEGV on Ubuntu CI)
+        #[cfg(feature = "postgres")]
         if self.db.backend() == BackendType::Postgres {
             let schema = self.schema.clone();
             let conn = self
@@ -313,6 +318,7 @@ impl TestFixture {
         }
 
         // For SQLite, use the pool connection
+        #[cfg(feature = "sqlite")]
         if self.db.backend() == BackendType::Sqlite {
             let conn = self
                 .db
@@ -373,6 +379,7 @@ pub mod fixtures {
 
     #[tokio::test]
     #[serial]
+    #[cfg(feature = "postgres")]
     async fn test_migration_function_postgres() {
         let mut conn =
             PgConnection::establish("postgres://cloacina:cloacina@localhost:5432/cloacina")

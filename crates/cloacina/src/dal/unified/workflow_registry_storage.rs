@@ -59,21 +59,27 @@ impl UnifiedRegistryStorage {
 impl RegistryStorage for UnifiedRegistryStorage {
     async fn store_binary(&mut self, data: Vec<u8>) -> Result<String, StorageError> {
         match self.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.store_binary_postgres(data).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.store_binary_sqlite(data).await,
         }
     }
 
     async fn retrieve_binary(&self, id: &str) -> Result<Option<Vec<u8>>, StorageError> {
         match self.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.retrieve_binary_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.retrieve_binary_sqlite(id).await,
         }
     }
 
     async fn delete_binary(&mut self, id: &str) -> Result<(), StorageError> {
         match self.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.delete_binary_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.delete_binary_sqlite(id).await,
         }
     }
@@ -84,6 +90,7 @@ impl RegistryStorage for UnifiedRegistryStorage {
 }
 
 impl UnifiedRegistryStorage {
+    #[cfg(feature = "postgres")]
     async fn store_binary_postgres(&self, data: Vec<u8>) -> Result<String, StorageError> {
         let conn = self.database.get_postgres_connection().await.map_err(|e| {
             StorageError::Backend(format!("Failed to get database connection: {}", e))
@@ -110,6 +117,7 @@ impl UnifiedRegistryStorage {
         Ok(id.0.to_string())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn store_binary_sqlite(&self, data: Vec<u8>) -> Result<String, StorageError> {
         let conn = self
             .database
@@ -138,6 +146,7 @@ impl UnifiedRegistryStorage {
         Ok(id.0.to_string())
     }
 
+    #[cfg(feature = "postgres")]
     async fn retrieve_binary_postgres(&self, id: &str) -> Result<Option<Vec<u8>>, StorageError> {
         let registry_uuid =
             Uuid::parse_str(id).map_err(|_| StorageError::InvalidId { id: id.to_string() })?;
@@ -161,6 +170,7 @@ impl UnifiedRegistryStorage {
         Ok(entry.map(|e| e.data.into_inner()))
     }
 
+    #[cfg(feature = "sqlite")]
     async fn retrieve_binary_sqlite(&self, id: &str) -> Result<Option<Vec<u8>>, StorageError> {
         let uuid =
             Uuid::parse_str(id).map_err(|_| StorageError::InvalidId { id: id.to_string() })?;
@@ -189,6 +199,7 @@ impl UnifiedRegistryStorage {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn delete_binary_postgres(&self, id: &str) -> Result<(), StorageError> {
         let registry_uuid =
             Uuid::parse_str(id).map_err(|_| StorageError::InvalidId { id: id.to_string() })?;
@@ -209,6 +220,7 @@ impl UnifiedRegistryStorage {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn delete_binary_sqlite(&self, id: &str) -> Result<(), StorageError> {
         let uuid =
             Uuid::parse_str(id).map_err(|_| StorageError::InvalidId { id: id.to_string() })?;

@@ -32,11 +32,14 @@ impl<'a> TaskExecutionDAL<'a> {
         new_task: NewTaskExecution,
     ) -> Result<TaskExecution, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.create_postgres(new_task).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.create_sqlite(new_task).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn create_postgres(
         &self,
         new_task: NewTaskExecution,
@@ -76,6 +79,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(task.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn create_sqlite(
         &self,
         new_task: NewTaskExecution,
@@ -121,11 +125,14 @@ impl<'a> TaskExecutionDAL<'a> {
         task_id: UniversalUuid,
     ) -> Result<TaskExecution, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_by_id_postgres(task_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_by_id_sqlite(task_id).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_by_id_postgres(
         &self,
         task_id: UniversalUuid,
@@ -145,6 +152,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(task.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_by_id_sqlite(
         &self,
         task_id: UniversalUuid,
@@ -170,10 +178,12 @@ impl<'a> TaskExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<Vec<TaskExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_all_tasks_for_pipeline_postgres(pipeline_execution_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_all_tasks_for_pipeline_sqlite(pipeline_execution_id)
                     .await
@@ -181,6 +191,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_all_tasks_for_pipeline_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -204,6 +215,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(tasks.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_all_tasks_for_pipeline_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,

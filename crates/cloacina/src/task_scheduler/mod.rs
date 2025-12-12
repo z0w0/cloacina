@@ -394,6 +394,7 @@ impl TaskScheduler {
         // Create pipeline AND tasks in a single atomic transaction
         // This prevents the race condition where the scheduler sees a pipeline before tasks exist
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.create_pipeline_postgres(
                     pipeline_id,
@@ -405,6 +406,7 @@ impl TaskScheduler {
                 )
                 .await?;
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.create_pipeline_sqlite(
                     pipeline_id,
@@ -423,6 +425,7 @@ impl TaskScheduler {
     }
 
     /// Creates pipeline and tasks in PostgreSQL.
+    #[cfg(feature = "postgres")]
     async fn create_pipeline_postgres(
         &self,
         pipeline_id: UniversalUuid,
@@ -483,6 +486,7 @@ impl TaskScheduler {
     }
 
     /// Creates pipeline and tasks in SQLite.
+    #[cfg(feature = "sqlite")]
     async fn create_pipeline_sqlite(
         &self,
         pipeline_id: UniversalUuid,

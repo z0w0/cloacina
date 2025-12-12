@@ -37,6 +37,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         let storage_type = self.storage.storage_type();
 
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => {
                 self.store_package_metadata_postgres(
                     registry_uuid,
@@ -46,6 +47,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
                 )
                 .await
             }
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => {
                 self.store_package_metadata_sqlite(
                     registry_uuid,
@@ -58,6 +60,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn store_package_metadata_postgres(
         &self,
         registry_uuid: Uuid,
@@ -114,6 +117,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         Ok(id.0)
     }
 
+    #[cfg(feature = "sqlite")]
     async fn store_package_metadata_sqlite(
         &self,
         registry_uuid: Uuid,
@@ -181,10 +185,12 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         RegistryError,
     > {
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => {
                 self.get_package_metadata_postgres(package_name, version)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => {
                 self.get_package_metadata_sqlite(package_name, version)
                     .await
@@ -192,6 +198,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_package_metadata_postgres(
         &self,
         package_name: &str,
@@ -236,6 +243,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         }
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_package_metadata_sqlite(
         &self,
         package_name: &str,
@@ -283,11 +291,14 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
     /// List all packages in the registry.
     pub(super) async fn list_all_packages(&self) -> Result<Vec<WorkflowMetadata>, RegistryError> {
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => self.list_all_packages_postgres().await,
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => self.list_all_packages_sqlite().await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn list_all_packages_postgres(&self) -> Result<Vec<WorkflowMetadata>, RegistryError> {
         use crate::dal::unified::models::UnifiedWorkflowPackage;
         use crate::database::schema::unified::workflow_packages;
@@ -330,6 +341,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         Ok(workflows)
     }
 
+    #[cfg(feature = "sqlite")]
     async fn list_all_packages_sqlite(&self) -> Result<Vec<WorkflowMetadata>, RegistryError> {
         use crate::dal::unified::models::UnifiedWorkflowPackage;
         use crate::database::schema::unified::workflow_packages;
@@ -379,10 +391,12 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         version: &str,
     ) -> Result<(), RegistryError> {
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => {
                 self.delete_package_metadata_postgres(package_name, version)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => {
                 self.delete_package_metadata_sqlite(package_name, version)
                     .await
@@ -390,6 +404,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn delete_package_metadata_postgres(
         &self,
         package_name: &str,
@@ -421,6 +436,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn delete_package_metadata_sqlite(
         &self,
         package_name: &str,
@@ -458,15 +474,18 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         package_id: Uuid,
     ) -> Result<Option<(String, WorkflowMetadata)>, RegistryError> {
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => {
                 self.get_package_metadata_by_id_postgres(package_id).await
             }
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => {
                 self.get_package_metadata_by_id_sqlite(package_id).await
             }
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_package_metadata_by_id_postgres(
         &self,
         package_id: Uuid,
@@ -520,6 +539,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         }
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_package_metadata_by_id_sqlite(
         &self,
         package_id: Uuid,
@@ -580,16 +600,19 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         package_id: Uuid,
     ) -> Result<(), RegistryError> {
         match self.database.backend() {
+            #[cfg(feature = "postgres")]
             crate::database::BackendType::Postgres => {
                 self.delete_package_metadata_by_id_postgres(package_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             crate::database::BackendType::Sqlite => {
                 self.delete_package_metadata_by_id_sqlite(package_id).await
             }
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn delete_package_metadata_by_id_postgres(
         &self,
         package_id: Uuid,
@@ -615,6 +638,7 @@ impl<S: RegistryStorage> WorkflowRegistryImpl<S> {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn delete_package_metadata_by_id_sqlite(
         &self,
         package_id: Uuid,

@@ -32,11 +32,14 @@ impl<'a> TaskExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<Vec<TaskExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_pending_tasks_postgres(pipeline_execution_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_pending_tasks_sqlite(pipeline_execution_id).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_pending_tasks_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -61,6 +64,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(tasks.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_pending_tasks_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -91,10 +95,12 @@ impl<'a> TaskExecutionDAL<'a> {
         pipeline_execution_ids: Vec<UniversalUuid>,
     ) -> Result<Vec<TaskExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_pending_tasks_batch_postgres(pipeline_execution_ids)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_pending_tasks_batch_sqlite(pipeline_execution_ids)
                     .await
@@ -102,6 +108,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_pending_tasks_batch_postgres(
         &self,
         pipeline_execution_ids: Vec<UniversalUuid>,
@@ -130,6 +137,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(tasks.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_pending_tasks_batch_sqlite(
         &self,
         pipeline_execution_ids: Vec<UniversalUuid>,
@@ -164,10 +172,12 @@ impl<'a> TaskExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<bool, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.check_pipeline_completion_postgres(pipeline_execution_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.check_pipeline_completion_sqlite(pipeline_execution_id)
                     .await
@@ -175,6 +185,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn check_pipeline_completion_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -200,6 +211,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(incomplete_count == 0)
     }
 
+    #[cfg(feature = "sqlite")]
     async fn check_pipeline_completion_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -232,10 +244,12 @@ impl<'a> TaskExecutionDAL<'a> {
         task_name: &str,
     ) -> Result<String, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_task_status_postgres(pipeline_execution_id, task_name)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_task_status_sqlite(pipeline_execution_id, task_name)
                     .await
@@ -243,6 +257,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_task_status_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -270,6 +285,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(status)
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_task_status_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -304,10 +320,12 @@ impl<'a> TaskExecutionDAL<'a> {
         task_names: Vec<String>,
     ) -> Result<std::collections::HashMap<String, String>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_task_statuses_batch_postgres(pipeline_execution_id, task_names)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_task_statuses_batch_sqlite(pipeline_execution_id, task_names)
                     .await
@@ -315,6 +333,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_task_statuses_batch_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -347,6 +366,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(results.into_iter().collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_task_statuses_batch_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,

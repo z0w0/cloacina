@@ -95,6 +95,7 @@
 //! Migrations are automatically applied when using `DefaultRunner`. For lower-level
 //! database access, migrations can be run manually using `run_migrations()`.
 
+#[cfg(feature = "postgres")]
 pub mod admin;
 pub mod connection;
 pub mod schema;
@@ -113,6 +114,7 @@ pub use connection::{AnyConnection, AnyPool, BackendType, Database};
 pub use connection::{DbConnection, DbConnectionManager, DbPool};
 
 // Re-export admin types for tenant management
+#[cfg(feature = "postgres")]
 pub use admin::{AdminError, DatabaseAdmin, TenantConfig, TenantCredentials};
 
 /// Type alias for database operation results.
@@ -193,6 +195,7 @@ pub fn run_migrations(conn: &mut DbConnection) -> Result<()> {
 ///
 /// * `Ok(())` - If migrations complete successfully
 /// * `Err(_)` - If migration fails
+#[cfg(feature = "postgres")]
 pub fn run_migrations_postgres(conn: &mut diesel::pg::PgConnection) -> Result<()> {
     conn.run_pending_migrations(POSTGRES_MIGRATIONS)
         .expect("Failed to run PostgreSQL migrations");
@@ -213,6 +216,7 @@ pub fn run_migrations_postgres(conn: &mut diesel::pg::PgConnection) -> Result<()
 ///
 /// * `Ok(())` - If migrations complete successfully
 /// * `Err(_)` - If migration fails
+#[cfg(feature = "sqlite")]
 pub fn run_migrations_sqlite(conn: &mut diesel::sqlite::SqliteConnection) -> Result<()> {
     conn.run_pending_migrations(SQLITE_MIGRATIONS)
         .expect("Failed to run SQLite migrations");

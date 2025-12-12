@@ -87,7 +87,9 @@ pub use workflow_registry_storage::UnifiedRegistryStorage;
 macro_rules! backend_dispatch {
     ($backend:expr, $pg_block:block, $sqlite_block:block) => {
         match $backend {
+            #[cfg(feature = "postgres")]
             $crate::database::BackendType::Postgres => $pg_block,
+            #[cfg(feature = "sqlite")]
             $crate::database::BackendType::Sqlite => $sqlite_block,
         }
     };

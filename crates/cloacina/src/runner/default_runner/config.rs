@@ -215,6 +215,7 @@ impl DefaultRunnerBuilder {
     }
 
     /// Validates the schema name contains only alphanumeric characters and underscores
+    #[cfg(feature = "postgres")]
     pub(super) fn validate_schema_name(schema: &str) -> Result<(), PipelineError> {
         if !schema.chars().all(|c| c.is_alphanumeric() || c == '_') {
             return Err(PipelineError::Configuration {
@@ -233,6 +234,7 @@ impl DefaultRunnerBuilder {
                 message: "Database URL is required".to_string(),
             })?;
 
+        #[cfg(feature = "postgres")]
         if let Some(ref schema) = self.schema {
             Self::validate_schema_name(schema)?;
 
@@ -256,7 +258,8 @@ impl DefaultRunnerBuilder {
             self.schema.as_deref(),
         );
 
-        // Set up schema if specified
+        // Set up schema if specified (PostgreSQL only)
+        #[cfg(feature = "postgres")]
         if let Some(ref schema) = self.schema {
             database
                 .setup_schema(schema)
@@ -266,6 +269,14 @@ impl DefaultRunnerBuilder {
                 })?;
         } else {
             // Run migrations in public schema
+            database
+                .run_migrations()
+                .await
+                .map_err(|e| PipelineError::DatabaseConnection { message: e })?;
+        }
+
+        #[cfg(not(feature = "postgres"))]
+        {
             database
                 .run_migrations()
                 .await

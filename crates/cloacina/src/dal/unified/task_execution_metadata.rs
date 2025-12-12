@@ -48,11 +48,14 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         new_metadata: NewTaskExecutionMetadata,
     ) -> Result<TaskExecutionMetadata, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.create_postgres(new_metadata).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.create_sqlite(new_metadata).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn create_postgres(
         &self,
         new_metadata: NewTaskExecutionMetadata,
@@ -93,6 +96,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(result.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn create_sqlite(
         &self,
         new_metadata: NewTaskExecutionMetadata,
@@ -140,10 +144,12 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         task_namespace: &TaskNamespace,
     ) -> Result<TaskExecutionMetadata, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_by_pipeline_and_task_postgres(pipeline_id, task_namespace)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_by_pipeline_and_task_sqlite(pipeline_id, task_namespace)
                     .await
@@ -151,6 +157,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_by_pipeline_and_task_postgres(
         &self,
         pipeline_id: UniversalUuid,
@@ -177,6 +184,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(result.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_by_pipeline_and_task_sqlite(
         &self,
         pipeline_id: UniversalUuid,
@@ -209,11 +217,14 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         task_execution_id: UniversalUuid,
     ) -> Result<TaskExecutionMetadata, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_by_task_execution_postgres(task_execution_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_by_task_execution_sqlite(task_execution_id).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_by_task_execution_postgres(
         &self,
         task_execution_id: UniversalUuid,
@@ -237,6 +248,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(result.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_by_task_execution_sqlite(
         &self,
         task_execution_id: UniversalUuid,
@@ -267,10 +279,12 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         context_id: Option<UniversalUuid>,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.update_context_id_postgres(task_execution_id, context_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.update_context_id_sqlite(task_execution_id, context_id)
                     .await
@@ -278,6 +292,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn update_context_id_postgres(
         &self,
         task_execution_id: UniversalUuid,
@@ -306,6 +321,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn update_context_id_sqlite(
         &self,
         task_execution_id: UniversalUuid,
@@ -340,10 +356,12 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         new_metadata: NewTaskExecutionMetadata,
     ) -> Result<TaskExecutionMetadata, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.upsert_task_execution_metadata_postgres(new_metadata)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.upsert_task_execution_metadata_sqlite(new_metadata)
                     .await
@@ -351,6 +369,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn upsert_task_execution_metadata_postgres(
         &self,
         new_metadata: NewTaskExecutionMetadata,
@@ -401,6 +420,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(result.into())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn upsert_task_execution_metadata_sqlite(
         &self,
         new_metadata: NewTaskExecutionMetadata,
@@ -497,10 +517,12 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         dependency_task_names: &[String],
     ) -> Result<Vec<TaskExecutionMetadata>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_dependency_metadata_postgres(pipeline_id, dependency_task_names)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_dependency_metadata_sqlite(pipeline_id, dependency_task_names)
                     .await
@@ -508,6 +530,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_dependency_metadata_postgres(
         &self,
         pipeline_id: UniversalUuid,
@@ -534,6 +557,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(results.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_dependency_metadata_sqlite(
         &self,
         pipeline_id: UniversalUuid,
@@ -571,6 +595,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
 
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.get_dependency_metadata_with_contexts_postgres(
                     pipeline_id,
@@ -578,6 +603,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
                 )
                 .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.get_dependency_metadata_with_contexts_sqlite(
                     pipeline_id,
@@ -588,6 +614,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_dependency_metadata_with_contexts_postgres(
         &self,
         pipeline_id: UniversalUuid,
@@ -626,6 +653,7 @@ impl<'a> TaskExecutionMetadataDAL<'a> {
         Ok(results.into_iter().map(|(m, c)| (m.into(), c)).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_dependency_metadata_with_contexts_sqlite(
         &self,
         pipeline_id: UniversalUuid,

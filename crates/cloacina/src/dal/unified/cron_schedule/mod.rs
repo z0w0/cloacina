@@ -49,7 +49,9 @@ impl<'a> CronScheduleDAL<'a> {
         new_schedule: NewCronSchedule,
     ) -> Result<CronSchedule, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.create_postgres(new_schedule).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.create_sqlite(new_schedule).await,
         }
     }
@@ -57,7 +59,9 @@ impl<'a> CronScheduleDAL<'a> {
     /// Retrieves a cron schedule by its ID.
     pub async fn get_by_id(&self, id: UniversalUuid) -> Result<CronSchedule, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_by_id_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_by_id_sqlite(id).await,
         }
     }
@@ -68,7 +72,9 @@ impl<'a> CronScheduleDAL<'a> {
         now: DateTime<Utc>,
     ) -> Result<Vec<CronSchedule>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_due_schedules_postgres(now).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_due_schedules_sqlite(now).await,
         }
     }
@@ -81,10 +87,12 @@ impl<'a> CronScheduleDAL<'a> {
         next_run: DateTime<Utc>,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.update_schedule_times_postgres(id, last_run, next_run)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.update_schedule_times_sqlite(id, last_run, next_run)
                     .await
@@ -95,7 +103,9 @@ impl<'a> CronScheduleDAL<'a> {
     /// Enables a cron schedule.
     pub async fn enable(&self, id: UniversalUuid) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.enable_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.enable_sqlite(id).await,
         }
     }
@@ -103,7 +113,9 @@ impl<'a> CronScheduleDAL<'a> {
     /// Disables a cron schedule.
     pub async fn disable(&self, id: UniversalUuid) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.disable_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.disable_sqlite(id).await,
         }
     }
@@ -111,7 +123,9 @@ impl<'a> CronScheduleDAL<'a> {
     /// Deletes a cron schedule from the database.
     pub async fn delete(&self, id: UniversalUuid) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.delete_postgres(id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.delete_sqlite(id).await,
         }
     }
@@ -124,7 +138,9 @@ impl<'a> CronScheduleDAL<'a> {
         offset: i64,
     ) -> Result<Vec<CronSchedule>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.list_postgres(enabled_only, limit, offset).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.list_sqlite(enabled_only, limit, offset).await,
         }
     }
@@ -135,7 +151,9 @@ impl<'a> CronScheduleDAL<'a> {
         workflow_name: &str,
     ) -> Result<Vec<CronSchedule>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.find_by_workflow_postgres(workflow_name).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.find_by_workflow_sqlite(workflow_name).await,
         }
     }
@@ -147,7 +165,9 @@ impl<'a> CronScheduleDAL<'a> {
         next_run: DateTime<Utc>,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.update_next_run_postgres(id, next_run).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.update_next_run_sqlite(id, next_run).await,
         }
     }
@@ -161,10 +181,12 @@ impl<'a> CronScheduleDAL<'a> {
         next_run: DateTime<Utc>,
     ) -> Result<bool, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.claim_and_update_postgres(id, current_time, last_run, next_run)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.claim_and_update_sqlite(id, current_time, last_run, next_run)
                     .await
@@ -175,7 +197,9 @@ impl<'a> CronScheduleDAL<'a> {
     /// Counts the total number of cron schedules.
     pub async fn count(&self, enabled_only: bool) -> Result<i64, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.count_postgres(enabled_only).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.count_sqlite(enabled_only).await,
         }
     }
@@ -189,6 +213,7 @@ impl<'a> CronScheduleDAL<'a> {
         next_run: DateTime<Utc>,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.update_expression_and_timezone_postgres(
                     id,
@@ -198,6 +223,7 @@ impl<'a> CronScheduleDAL<'a> {
                 )
                 .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.update_expression_and_timezone_sqlite(id, cron_expression, timezone, next_run)
                     .await

@@ -16,10 +16,21 @@
 
 //! Database backend types and runtime backend selection.
 
-use deadpool_diesel::postgres::{Manager as PgManager, Pool as PgPool};
+#[cfg(not(any(feature = "postgres", feature = "sqlite")))]
+compile_error!("cloacina requires either the \"postgres\" or \"sqlite\" feature to be enabled");
+
+#[cfg(all(feature = "postgres", not(feature = "sqlite")))]
+use deadpool_diesel::postgres::Manager as PgManager;
+#[cfg(feature = "postgres")]
+use deadpool_diesel::postgres::Pool as PgPool;
+#[cfg(feature = "postgres")]
 use diesel::PgConnection;
 
+#[cfg(all(feature = "sqlite", not(feature = "postgres")))]
+use deadpool_diesel::sqlite::Manager as SqliteManager;
+#[cfg(feature = "sqlite")]
 use deadpool_diesel::sqlite::Pool as SqlitePool;
+#[cfg(feature = "sqlite")]
 use diesel::SqliteConnection;
 
 // =============================================================================
@@ -30,8 +41,10 @@ use diesel::SqliteConnection;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BackendType {
     /// PostgreSQL backend
+    #[cfg(feature = "postgres")]
     Postgres,
     /// SQLite backend
+    #[cfg(feature = "sqlite")]
     Sqlite,
 }
 
@@ -47,6 +60,7 @@ impl BackendType {
     /// # Panics
     /// Panics if the URL scheme doesn't match any enabled backend.
     pub fn from_url(url: &str) -> Self {
+        #[cfg(feature = "postgres")]
         if url.starts_with("postgres://") || url.starts_with("postgresql://") {
             return BackendType::Postgres;
         }
@@ -56,6 +70,7 @@ impl BackendType {
         // - file: URI format (e.g., file:test?mode=memory&cache=shared)
         // - file paths (relative or absolute)
         // - :memory: for in-memory databases
+        #[cfg(feature = "sqlite")]
         if url.starts_with("sqlite://")
             || url.starts_with("file:")
             || url.starts_with("/")
@@ -82,10 +97,23 @@ impl BackendType {
 /// This enum enables runtime database backend selection using Diesel's
 /// `MultiConnection` derive macro. The actual connection type is determined
 /// at runtime based on the connection URL.
+#[cfg(all(feature = "postgres", feature = "sqlite"))]
 #[derive(diesel::MultiConnection)]
 pub enum AnyConnection {
     /// PostgreSQL connection variant
     Postgres(PgConnection),
+    /// SQLite connection variant
+    Sqlite(SqliteConnection),
+}
+
+#[cfg(all(feature = "postgres", not(feature = "sqlite")))]
+pub enum AnyConnection {
+    /// PostgreSQL connection variant
+    Postgres(PgConnection),
+}
+
+#[cfg(all(feature = "sqlite", not(feature = "postgres")))]
+pub enum AnyConnection {
     /// SQLite connection variant
     Sqlite(SqliteConnection),
 }
@@ -96,15 +124,19 @@ pub enum AnyConnection {
 #[derive(Clone)]
 pub enum AnyPool {
     /// PostgreSQL connection pool
+    #[cfg(feature = "postgres")]
     Postgres(PgPool),
     /// SQLite connection pool
+    #[cfg(feature = "sqlite")]
     Sqlite(SqlitePool),
 }
 
 impl std::fmt::Debug for AnyPool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(feature = "postgres")]
             AnyPool::Postgres(_) => write!(f, "AnyPool::Postgres(...)"),
+            #[cfg(feature = "sqlite")]
             AnyPool::Sqlite(_) => write!(f, "AnyPool::Sqlite(...)"),
         }
     }
@@ -112,33 +144,41 @@ impl std::fmt::Debug for AnyPool {
 
 impl AnyPool {
     /// Returns a reference to the PostgreSQL pool if this is a PostgreSQL backend.
+    #[cfg(feature = "postgres")]
     pub fn as_postgres(&self) -> Option<&PgPool> {
         match self {
             AnyPool::Postgres(pool) => Some(pool),
+            #[cfg(feature = "sqlite")]
             _ => None,
         }
     }
 
     /// Returns a reference to the SQLite pool if this is a SQLite backend.
+    #[cfg(feature = "sqlite")]
     pub fn as_sqlite(&self) -> Option<&SqlitePool> {
         match self {
             AnyPool::Sqlite(pool) => Some(pool),
+            #[cfg(feature = "postgres")]
             _ => None,
         }
     }
 
     /// Returns the PostgreSQL pool, panicking if this is not a PostgreSQL backend.
+    #[cfg(feature = "postgres")]
     pub fn expect_postgres(&self) -> &PgPool {
         match self {
             AnyPool::Postgres(pool) => pool,
+            #[cfg(feature = "sqlite")]
             _ => panic!("Expected PostgreSQL pool but got SQLite"),
         }
     }
 
     /// Returns the SQLite pool, panicking if this is not a SQLite backend.
+    #[cfg(feature = "sqlite")]
     pub fn expect_sqlite(&self) -> &SqlitePool {
         match self {
             AnyPool::Sqlite(pool) => pool,
+            #[cfg(feature = "postgres")]
             _ => panic!("Expected SQLite pool but got PostgreSQL"),
         }
     }
@@ -151,10 +191,25 @@ impl AnyPool {
 // These aliases default to PostgreSQL for backwards compatibility.
 
 /// Type alias for the connection type (defaults to PostgreSQL)
+#[cfg(all(feature = "postgres", not(feature = "sqlite")))]
 pub type DbConnection = PgConnection;
 
 /// Type alias for the connection manager (defaults to PostgreSQL)
+#[cfg(all(feature = "postgres", not(feature = "sqlite")))]
 pub type DbConnectionManager = PgManager;
 
 /// Type alias for the connection pool (defaults to PostgreSQL)
+#[cfg(all(feature = "postgres", not(feature = "sqlite")))]
 pub type DbPool = PgPool;
+
+/// Type alias for the connection type (sqlite-only builds)
+#[cfg(all(feature = "sqlite", not(feature = "postgres")))]
+pub type DbConnection = SqliteConnection;
+
+/// Type alias for the connection manager (sqlite-only builds)
+#[cfg(all(feature = "sqlite", not(feature = "postgres")))]
+pub type DbConnectionManager = SqliteManager;
+
+/// Type alias for the connection pool (sqlite-only builds)
+#[cfg(all(feature = "sqlite", not(feature = "postgres")))]
+pub type DbPool = SqlitePool;

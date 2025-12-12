@@ -24,6 +24,8 @@ use crate::database::BackendType;
 use crate::error::ValidationError;
 use crate::models::task_execution::TaskExecution;
 use diesel::prelude::*;
+
+#[cfg(feature = "postgres")]
 use uuid::Uuid;
 
 impl<'a> TaskExecutionDAL<'a> {
@@ -35,10 +37,12 @@ impl<'a> TaskExecutionDAL<'a> {
         new_attempt: i32,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.schedule_retry_postgres(task_id, retry_at, new_attempt)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.schedule_retry_sqlite(task_id, retry_at, new_attempt)
                     .await
@@ -46,6 +50,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn schedule_retry_postgres(
         &self,
         task_id: UniversalUuid,
@@ -78,6 +83,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn schedule_retry_sqlite(
         &self,
         task_id: UniversalUuid,
@@ -116,11 +122,14 @@ impl<'a> TaskExecutionDAL<'a> {
         limit: usize,
     ) -> Result<Vec<ClaimResult>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.claim_ready_task_postgres(limit).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.claim_ready_task_sqlite(limit).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn claim_ready_task_postgres(
         &self,
         limit: usize,
@@ -184,6 +193,7 @@ impl<'a> TaskExecutionDAL<'a> {
             .collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn claim_ready_task_sqlite(
         &self,
         limit: usize,
@@ -244,11 +254,14 @@ impl<'a> TaskExecutionDAL<'a> {
     /// Retrieves tasks that are ready for retry (retry_at time has passed).
     pub async fn get_ready_for_retry(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_ready_for_retry_postgres().await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_ready_for_retry_sqlite().await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_ready_for_retry_postgres(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         let conn = self
             .dal
@@ -275,6 +288,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(ready_tasks.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_ready_for_retry_sqlite(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         let conn = self
             .dal

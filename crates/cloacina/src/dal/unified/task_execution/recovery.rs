@@ -29,11 +29,14 @@ impl<'a> TaskExecutionDAL<'a> {
     /// Retrieves tasks that are stuck in "Running" state (orphaned tasks).
     pub async fn get_orphaned_tasks(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.get_orphaned_tasks_postgres().await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.get_orphaned_tasks_sqlite().await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn get_orphaned_tasks_postgres(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         let conn = self
             .dal
@@ -54,6 +57,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(orphaned_tasks.into_iter().map(Into::into).collect())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn get_orphaned_tasks_sqlite(&self) -> Result<Vec<TaskExecution>, ValidationError> {
         let conn = self
             .dal
@@ -80,11 +84,14 @@ impl<'a> TaskExecutionDAL<'a> {
         task_id: UniversalUuid,
     ) -> Result<(), ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => self.reset_task_for_recovery_postgres(task_id).await,
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => self.reset_task_for_recovery_sqlite(task_id).await,
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn reset_task_for_recovery_postgres(
         &self,
         task_id: UniversalUuid,
@@ -114,6 +121,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(())
     }
 
+    #[cfg(feature = "sqlite")]
     async fn reset_task_for_recovery_sqlite(
         &self,
         task_id: UniversalUuid,
@@ -149,10 +157,12 @@ impl<'a> TaskExecutionDAL<'a> {
         pipeline_execution_id: UniversalUuid,
     ) -> Result<bool, ValidationError> {
         match self.dal.backend() {
+            #[cfg(feature = "postgres")]
             BackendType::Postgres => {
                 self.check_pipeline_failure_postgres(pipeline_execution_id)
                     .await
             }
+            #[cfg(feature = "sqlite")]
             BackendType::Sqlite => {
                 self.check_pipeline_failure_sqlite(pipeline_execution_id)
                     .await
@@ -160,6 +170,7 @@ impl<'a> TaskExecutionDAL<'a> {
         }
     }
 
+    #[cfg(feature = "postgres")]
     async fn check_pipeline_failure_postgres(
         &self,
         pipeline_execution_id: UniversalUuid,
@@ -186,6 +197,7 @@ impl<'a> TaskExecutionDAL<'a> {
         Ok(failed_count > 0)
     }
 
+    #[cfg(feature = "sqlite")]
     async fn check_pipeline_failure_sqlite(
         &self,
         pipeline_execution_id: UniversalUuid,
